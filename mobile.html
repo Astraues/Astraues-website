@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<script>
+// ── DEVICE REDIRECT ── if desktop/tablet hits mobile.html, bounce back ────────
+(function(){
+  var ua = navigator.userAgent;
+  var w  = window.innerWidth || screen.width;
+  var isMobile  = /android|iphone|ipod|blackberry|windows phone/i.test(ua) && !/ipad/i.test(ua);
+  var isTablet  = /ipad/i.test(ua) || (/android/i.test(ua) && !/mobile/i.test(ua)) || (navigator.maxTouchPoints > 1 && /macintosh/i.test(ua));
+  var tinyScreen = w < 768 && !isTablet;
+  if (!isMobile && !tinyScreen) {
+    window.location.replace('/');
+  }
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#080b14">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Astraeus — One bot. Total control.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:wght@400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{
+  height:100%;width:100%;
+  overflow:hidden;
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);color:var(--text);
+  -webkit-text-size-adjust:100%;
+  touch-action:manipulation;
+}
+::-webkit-scrollbar{display:none}
+
+/* ── THEME ── */
+[data-theme="dark"]{
+  --bg:#080b14;--bg2:#0d1120;--bg3:#121828;--bg4:#1a2236;
+  --glass:rgba(10,14,28,0.92);--glass2:rgba(15,20,38,0.96);
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#f0f4ff;--text2:#8892b0;--text3:#4a5568;
+  --acc:#6c8eff;--acc2:#9b6dff;--acc3:#00e5c8;
+  --acc-alpha:rgba(108,142,255,0.18);
+  --ok:#00d084;--warn:#ffb800;--err:#ff5370;
+  --glow:rgba(108,142,255,0.2);--glow2:rgba(155,109,255,0.12);
+  --tab-bg:rgba(8,11,20,0.97);
+  --diamond1:rgba(108,142,255,0.55);--diamond2:rgba(155,109,255,0.38);
+  --diamond-b:rgba(108,142,255,0.3);
+}
+[data-theme="light"]{
+  --bg:#eef2ff;--bg2:#e2e8ff;--bg3:#fff;--bg4:#d8e0ff;
+  --glass:rgba(238,242,255,0.94);--glass2:rgba(248,250,255,0.97);
+  --border:rgba(0,0,0,0.07);--border2:rgba(108,142,255,0.22);
+  --text:#0d1120;--text2:#4a5568;--text3:#9ba8c0;
+  --acc:#3d5eff;--acc2:#7c3ddb;--acc3:#00a896;
+  --acc-alpha:rgba(61,94,255,0.12);
+  --ok:#00a86b;--warn:#e09800;--err:#d63031;
+  --glow:rgba(61,94,255,0.1);--glow2:rgba(124,61,219,0.07);
+  --tab-bg:rgba(238,242,255,0.97);
+  --diamond1:rgba(61,94,255,0.45);--diamond2:rgba(100,160,255,0.3);
+  --diamond-b:rgba(61,94,255,0.2);
+}
+
+/* ── LAYOUT ── */
+#root{
+  display:flex;flex-direction:column;
+  height:100dvh;width:100vw;
+  overflow:hidden;position:fixed;inset:0;
+}
+
+/* ── DIAMOND BG ── */
+#diamonds{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.dm{
+  position:absolute;border-radius:3px;
+  background:linear-gradient(135deg,var(--diamond1),var(--diamond2));
+  border:1px solid var(--diamond-b);
+  box-shadow:0 0 10px var(--diamond1);
+  transform:rotate(45deg);
+  animation:rise linear infinite;
+  opacity:0;
+}
+@keyframes rise{
+  0%{transform:rotate(45deg) translateY(0);opacity:0}
+  10%{opacity:.7}80%{opacity:.5}
+  100%{transform:rotate(405deg) translateY(-110dvh);opacity:0}
+}
+
+/* ── STATUS BAR SAFE AREA ── */
+#statusbar{
+  height:env(safe-area-inset-top,0px);
+  background:var(--glass2);
+  flex-shrink:0;
+  position:relative;z-index:50;
+}
+
+/* ── TOP NAV BAR ── */
+#topnav{
+  height:56px;flex-shrink:0;
+  background:var(--glass2);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 18px;
+  position:relative;z-index:40;
+}
+#topnav-logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.15rem;
+  letter-spacing:.06em;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+#topnav-right{display:flex;align-items:center;gap:8px}
+.icon-btn{
+  width:38px;height:38px;border-radius:11px;
+  border:1px solid var(--border2);
+  background:var(--glass);
+  display:flex;align-items:center;justify-content:center;
+  font-size:.95rem;color:var(--text2);
+  transition:background .15s;
+  cursor:pointer;
+}
+.icon-btn:active{background:var(--acc-alpha)}
+#topnav-title{
+  font-family:'Syne',sans-serif;font-size:.68rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--text3);
+  position:absolute;left:50%;transform:translateX(-50%);
+}
+
+/* ── PAGE SCROLL AREA ── */
+#scroll{
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  position:relative;z-index:1;
+  scroll-behavior:smooth;
+}
+
+/* ── BOTTOM TAB BAR ── */
+#tabbar{
+  flex-shrink:0;
+  background:var(--tab-bg);
+  backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);
+  border-top:1px solid var(--border);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  position:relative;z-index:40;
+}
+.tab{
+  display:flex;flex-direction:column;align-items:center;
+  padding:10px 4px 8px;gap:3px;
+  cursor:pointer;transition:all .15s;
+  border:none;background:none;
+  color:var(--text3);
+  min-height:56px;
+}
+.tab.active{color:var(--acc)}
+.tab-icon{font-size:1.2rem;line-height:1;transition:transform .2s}
+.tab.active .tab-icon{transform:translateY(-2px)}
+.tab-label{font-size:.58rem;font-weight:600;letter-spacing:.04em;font-family:'Syne',sans-serif;text-transform:uppercase}
+.tab:active .tab-icon{transform:scale(.88)}
+
+/* ── MORE SHEET (slide up) ── */
+#more-sheet{
+  position:fixed;bottom:0;left:0;right:0;z-index:200;
+  background:var(--glass2);
+  backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);
+  border-top:1px solid var(--border2);
+  border-radius:22px 22px 0 0;
+  padding:16px 20px calc(env(safe-area-inset-bottom,0px) + 20px);
+  transform:translateY(100%);
+  transition:transform .35s cubic-bezier(.4,0,.2,1);
+}
+#more-sheet.open{transform:translateY(0)}
+.sheet-handle{
+  width:36px;height:4px;border-radius:99px;
+  background:var(--border2);margin:0 auto 18px;
+}
+.sheet-title{
+  font-family:'Syne',sans-serif;font-size:.65rem;font-weight:700;
+  letter-spacing:.12em;text-transform:uppercase;color:var(--text3);
+  margin-bottom:10px;padding-left:4px;
+}
+.sheet-row{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 12px;border-radius:13px;
+  cursor:pointer;transition:background .15s;
+  margin-bottom:4px;
+  border:none;background:none;width:100%;text-align:left;
+  color:var(--text);
+}
+.sheet-row:active{background:var(--acc-alpha)}
+.sheet-icon{
+  width:40px;height:40px;border-radius:12px;
+  background:var(--acc-alpha);border:1px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;font-size:1rem;
+  flex-shrink:0;
+}
+.sheet-label{font-size:.9rem;font-weight:500}
+.sheet-sublabel{font-size:.72rem;color:var(--text2)}
+#sheet-overlay{
+  position:fixed;inset:0;z-index:190;
+  background:rgba(0,0,0,.4);
+  display:none;backdrop-filter:blur(2px);
+}
+#sheet-overlay.open{display:block}
+
+/* ── PAGES ── */
+.page{display:none;padding:24px 16px 24px;animation:fadeIn .25s ease}
+.page.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
+/* ── VERIFY SCREEN ── */
+#verify{
+  position:fixed;inset:0;z-index:999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;
+  flex-direction:column;
+}
+#verify.done{opacity:0;pointer-events:none;transition:opacity .5s}
+.v-logo{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:2.2rem;
+  letter-spacing:.06em;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:6px;
+}
+.v-sub{color:var(--text2);font-size:.75rem;margin-bottom:28px;letter-spacing:.06em}
+.v-shield{
+  width:76px;height:76px;
+  background:var(--acc-alpha);border:1px solid var(--border2);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:2rem;margin-bottom:24px;
+  animation:shieldPulse 2.5s infinite;
+}
+@keyframes shieldPulse{0%,100%{box-shadow:0 0 0 0 var(--glow)}50%{box-shadow:0 0 0 14px transparent}}
+.v-ip-box{
+  width:100%;max-width:340px;
+  background:rgba(0,229,200,0.06);border:1px solid rgba(0,229,200,0.2);
+  border-radius:14px;padding:14px 16px;margin-bottom:20px;
+}
+.v-ip-label{font-size:.6rem;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-bottom:4px}
+.v-ip-val{font-family:'JetBrains Mono',monospace;font-size:.95rem;color:var(--acc3);font-weight:500;display:flex;align-items:center;gap:7px}
+.v-dot{width:7px;height:7px;border-radius:50%;background:var(--acc3);box-shadow:0 0 6px var(--acc3);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.v-loc{font-size:.68rem;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-top:4px}
+.v-check{
+  width:100%;max-width:340px;
+  background:var(--glass);border:1px solid var(--border2);
+  border-radius:14px;padding:18px 16px;
+  display:flex;align-items:center;gap:14px;
+  cursor:pointer;margin-bottom:20px;
+  transition:background .15s;
+}
+.v-check:active{background:var(--acc-alpha)}
+.v-checkbox{
+  width:26px;height:26px;border-radius:8px;
+  border:2px solid var(--border2);background:var(--bg2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all .2s;
+}
+.v-checkbox.checked{background:var(--acc);border-color:var(--acc)}
+.v-checkbox svg{opacity:0;transition:opacity .2s}
+.v-checkbox.checked svg{opacity:1}
+.v-check-label strong{display:block;font-size:.95rem;margin-bottom:2px}
+.v-check-label span{color:var(--text2);font-size:.75rem}
+.v-progress{width:100%;max-width:340px;display:none}
+.v-bar-track{height:3px;background:var(--bg4);border-radius:99px;overflow:hidden;margin-bottom:8px}
+.v-bar-fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--acc),var(--acc2),var(--acc3));transition:width .1s}
+.v-status-txt{font-family:'JetBrains Mono',monospace;font-size:.7rem;color:var(--text2);text-align:center}
+.v-footer{display:flex;align-items:center;gap:6px;color:var(--text3);font-size:.65rem;margin-top:14px}
+
+/* ── HERO ── */
+.hero{text-align:center;padding:32px 16px 28px;position:relative}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--acc-alpha);border:1px solid var(--border2);
+  border-radius:99px;padding:5px 14px;
+  font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--acc);font-family:'Syne',sans-serif;margin-bottom:14px;
+}
+.hero-logo{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:clamp(2.6rem,12vw,3.8rem);
+  letter-spacing:-.03em;line-height:1;
+  background:linear-gradient(135deg,var(--acc) 0%,var(--acc2) 50%,var(--acc3) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  margin-bottom:10px;
+  filter:drop-shadow(0 0 30px var(--glow));
+}
+.hero-sub{
+  font-size:.8rem;color:var(--text2);
+  letter-spacing:.2em;text-transform:uppercase;
+  font-weight:300;margin-bottom:28px;
+}
+.hero-btns{display:flex;flex-direction:column;gap:10px;margin-bottom:36px}
+.btn-primary{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:16px 20px;border-radius:14px;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  color:#fff;font-weight:700;font-size:.95rem;
+  font-family:'Syne',sans-serif;letter-spacing:.04em;
+  box-shadow:0 8px 28px var(--glow);
+  border:none;cursor:pointer;transition:opacity .15s;
+  text-decoration:none;
+}
+.btn-primary:active{opacity:.85}
+.btn-secondary{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:15px 20px;border-radius:14px;
+  background:var(--glass);
+  border:1px solid var(--border2);
+  color:var(--text);font-weight:500;font-size:.95rem;
+  cursor:pointer;transition:opacity .15s;
+  text-decoration:none;
+}
+.btn-secondary:active{opacity:.75}
+
+/* ── STATS ── */
+.stats-grid{
+  display:grid;grid-template-columns:repeat(2,1fr);
+  gap:1px;background:var(--border);
+  border-radius:16px;overflow:hidden;
+  border:1px solid var(--border);margin-bottom:28px;
+}
+.stat-cell{
+  background:var(--glass);padding:20px 14px;text-align:center;
+}
+.stat-val{
+  font-family:'Syne',sans-serif;font-weight:800;font-size:1.7rem;
+  color:var(--acc);line-height:1;margin-bottom:5px;
+}
+.stat-lbl{color:var(--text2);font-size:.65rem;text-transform:uppercase;letter-spacing:.08em}
+
+/* ── SECTION HEADER ── */
+.section-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  background:var(--acc-alpha);border:1px solid var(--border2);
+  border-radius:99px;padding:4px 12px;
+  font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--acc);font-family:'Syne',sans-serif;margin-bottom:10px;
+}
+.section-title{
+  font-family:'Syne',sans-serif;font-weight:800;
+  font-size:1.5rem;line-height:1.1;letter-spacing:-.02em;
+  margin-bottom:8px;
+}
+.section-lead{color:var(--text2);font-size:.85rem;line-height:1.7;margin-bottom:20px}
+.grad{
+  background:linear-gradient(135deg,var(--acc),var(--acc2) 60%,var(--acc3));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--border2),transparent);margin:24px 0}
+
+/* ── CARD ── */
+.card{
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:16px;padding:18px;
+  margin-bottom:12px;
+  transition:background .15s;
+}
+.card:active{background:var(--acc-alpha)}
+.card-icon{font-size:1.4rem;margin-bottom:10px}
+.card-title{font-family:'Syne',sans-serif;font-weight:700;font-size:.9rem;margin-bottom:6px}
+.card-desc{color:var(--text2);font-size:.8rem;line-height:1.65}
+.cards-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.cards-grid .card{margin-bottom:0}
+
+/* ── COMMAND CARDS (mobile-first layout) ── */
+.cmd-search-wrap{position:relative;margin-bottom:16px}
+.cmd-search{
+  width:100%;padding:14px 16px 14px 44px;
+  background:var(--glass);border:1px solid var(--border2);
+  border-radius:13px;color:var(--text);font-size:16px;
+  outline:none;-webkit-appearance:none;appearance:none;
+}
+.cmd-search:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--glow)}
+.cmd-search-ico{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);pointer-events:none}
+.cmd-group-title{
+  font-family:'Syne',sans-serif;font-weight:700;font-size:.8rem;
+  color:var(--text2);letter-spacing:.06em;text-transform:uppercase;
+  margin:16px 0 8px;display:flex;align-items:center;gap:8px;
+}
+.cmd-badge{
+  background:var(--acc-alpha);border:1px solid var(--border2);
+  border-radius:99px;padding:2px 9px;font-size:.6rem;color:var(--acc);
+  font-family:'JetBrains Mono',monospace;
+}
+.cmd-card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:12px;padding:14px 14px;margin-bottom:8px;
+  display:flex;align-items:center;gap:12px;
+}
+.cmd-card:active{background:var(--acc-alpha)}
+.cmd-chip{
+  font-family:'JetBrains Mono',monospace;font-size:.72rem;
+  background:var(--acc-alpha);border:1px solid var(--border2);
+  border-radius:7px;padding:4px 10px;color:var(--acc);
+  white-space:nowrap;flex-shrink:0;
+}
+.cmd-chip.slash{color:var(--acc2);background:rgba(155,109,255,.1);border-color:rgba(155,109,255,.25)}
+.cmd-info{flex:1;min-width:0}
+.cmd-info-desc{color:var(--text2);font-size:.75rem;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cmd-info-cat{font-size:.65rem;color:var(--text3);margin-top:2px}
+.cmd-copy{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:8px;padding:7px 10px;
+  color:var(--text3);font-size:.65rem;
+  display:flex;align-items:center;gap:4px;white-space:nowrap;
+  flex-shrink:0;font-family:'JetBrains Mono',monospace;
+  cursor:pointer;transition:all .15s;
+}
+.cmd-copy:active{background:var(--glow);color:var(--acc);border-color:var(--acc)}
+.cmd-copy.copied{color:var(--ok);border-color:var(--ok);background:rgba(0,208,132,.1)}
+.cmd-hidden{display:none}
+
+/* ── ROADMAP ── */
+.rm-section-title{
+  font-family:'Syne',sans-serif;font-size:.95rem;font-weight:700;
+  margin:20px 0 10px;display:flex;align-items:center;gap:8px;
+}
+.rm-card{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:11px;padding:12px 14px;margin-bottom:8px;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.rm-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.rm-dot.ip{background:var(--warn);box-shadow:0 0 8px var(--warn);animation:pulse 2s infinite}
+.rm-dot.cs{background:var(--acc);box-shadow:0 0 8px var(--glow)}
+.rm-dot.fp{background:var(--acc2);box-shadow:0 0 8px var(--glow2)}
+.rm-text{font-size:.82rem;font-weight:600}
+.rm-sub{font-size:.7rem;color:var(--text2);margin-top:2px}
+
+/* ── STATUS ── */
+.status-hero{text-align:center;padding:20px 0 16px}
+.status-emoji{font-size:2.5rem;margin-bottom:8px}
+.status-ok{font-family:'Syne',sans-serif;font-size:1.1rem;font-weight:700;color:var(--ok)}
+.status-sub{color:var(--text2);font-size:.8rem}
+.metrics-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:16px 0}
+.metric-cell{background:var(--glass);border:1px solid var(--border);border-radius:12px;padding:14px 8px;text-align:center}
+.metric-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--acc);margin-bottom:3px}
+.metric-lbl{color:var(--text2);font-size:.62rem}
+.uptime-bar-wrap{margin:16px 0}
+.uptime-labels{display:flex;justify-content:space-between;margin-bottom:6px;color:var(--text2);font-size:.72rem}
+.uptime-bar{height:8px;background:var(--bg4);border-radius:99px;overflow:hidden}
+.uptime-fill{height:100%;border-radius:99px;background:linear-gradient(90deg,var(--ok),var(--acc3));width:0%;transition:width 1.5s}
+.uptime-days{display:flex;gap:2px;margin-top:8px;flex-wrap:wrap}
+.uptime-day{height:20px;border-radius:3px;background:var(--ok);opacity:.65;flex:1;min-width:2px}
+.uptime-day.warn{background:var(--warn)}
+.uptime-day.down{background:var(--err)}
+.svc-row{
+  background:var(--glass);border:1px solid var(--border);
+  border-radius:12px;padding:14px 16px;margin-bottom:8px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.svc-name{display:flex;align-items:center;gap:8px;font-size:.85rem}
+.svc-dot{width:6px;height:6px;border-radius:50%;background:var(--ok);box-shadow:0 0 6px var(--ok);animation:pulse 2s infinite;flex-shrink:0}
+.svc-status{font-size:.72rem;font-weight:600;color:var(--ok)}
+
+/* ── FAQ ── */
+.faq-item{border-bottom:1px solid var(--border)}
+.faq-q{
+  width:100%;padding:16px 0;text-align:left;
+  color:var(--text);font-size:.88rem;font-weight:600;
+  display:flex;justify-content:space-between;align-items:center;gap:12px;
+  cursor:pointer;font-family:'Syne',sans-serif;
+}
+.faq-chev{flex-shrink:0;transition:transform .3s;color:var(--text3)}
+.faq-item.open .faq-chev{transform:rotate(180deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .35s;color:var(--text2);font-size:.82rem;line-height:1.85}
+.faq-item.open .faq-a{max-height:300px;padding-bottom:16px}
+
+/* ── LEGAL ── */
+.legal-section{margin-bottom:24px}
+.legal-section h2{font-family:'Syne',sans-serif;font-size:.88rem;font-weight:700;margin-bottom:8px}
+.legal-section p,.legal-section li{color:var(--text2);font-size:.8rem;line-height:1.85;margin-bottom:6px}
+.legal-section ul{padding-left:16px}
+.legal-date{color:var(--text3);font-size:.7rem;margin-bottom:24px;font-family:'JetBrains Mono',monospace}
+.legal-section a{color:var(--acc)}
+
+/* ── COMING SOON ── */
+.cs-card{
+  background:var(--glass);border:1px solid var(--border2);
+  border-radius:18px;padding:28px 20px;text-align:center;
+  position:relative;overflow:hidden;margin-bottom:16px;
+}
+.cs-card::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(135deg,var(--glow),transparent 60%,var(--glow2));
+  opacity:.7;pointer-events:none;
+}
+.cs-card-title{font-family:'Syne',sans-serif;font-size:1.15rem;font-weight:800;margin-bottom:8px;position:relative}
+.cs-card-body{color:var(--text2);font-size:.82rem;line-height:1.7;margin-bottom:20px;position:relative;max-width:480px;margin-left:auto;margin-right:auto}
+.feature-badge{
+  display:inline-flex;background:var(--glass);border:1px solid var(--border2);
+  border-radius:7px;padding:4px 10px;font-size:.68rem;font-weight:600;color:var(--text2);
+  font-family:'Syne',sans-serif;margin-top:10px;
+}
+
+/* ── ABOUT ── */
+.about-quick-stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px}
+.qs-cell{background:var(--acc-alpha);border:1px solid var(--border2);border-radius:10px;padding:14px;text-align:center}
+.qs-val{font-family:'Syne',sans-serif;font-weight:800;font-size:1.3rem;color:var(--acc);margin-bottom:3px}
+.qs-lbl{color:var(--text2);font-size:.68rem}
+.badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+.badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:var(--glass);border:1px solid var(--border2);
+  border-radius:7px;padding:5px 10px;font-size:.7rem;font-weight:600;color:var(--text2);
+  font-family:'Syne',sans-serif;
+}
+
+/* ── PAGE FOOTER ── */
+.page-footer{
+  padding:20px 0 12px;
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:10px;color:var(--text3);font-size:.7rem;
+  margin-top:24px;
+}
+.footer-links{display:flex;gap:16px}
+.footer-links button{color:var(--text3);font-size:.7rem;cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif}
+.footer-links a{color:var(--text3);font-size:.7rem;text-decoration:none}
+</style>
+</head>
+<body>
+
+<!-- DIAMOND FIELD -->
+<div id="diamonds"></div>
+
+<!-- VERIFY SCREEN -->
+<div id="verify">
+  <div class="v-logo">ASTRAEUS</div>
+  <div class="v-sub">Security Checkpoint · AstraeusShield™</div>
+  <div class="v-shield">⚡</div>
+  <div class="v-ip-box">
+    <div class="v-ip-label">Your IP Address</div>
+    <div class="v-ip-val"><span class="v-dot"></span><span id="v-ip">Detecting...</span></div>
+    <div class="v-loc" id="v-loc">Locating...</div>
+  </div>
+  <div class="v-check" id="v-btn" onclick="startVerify()">
+    <div class="v-checkbox" id="v-box">
+      <svg width="12" height="9" viewBox="0 0 14 10" fill="none"><path d="M1 5L5 9L13 1" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </div>
+    <div class="v-check-label">
+      <strong>I'm human — not a bot</strong>
+      <span>Tap to verify and enter Astraeus</span>
+    </div>
+  </div>
+  <div class="v-progress" id="v-progress">
+    <div class="v-bar-track"><div class="v-bar-fill" id="v-fill"></div></div>
+    <div class="v-status-txt" id="v-status-txt">Initializing...</div>
+  </div>
+  <div class="v-footer">
+    <svg width="10" height="10" viewBox="0 0 16 16" fill="currentColor"><path d="M8 1.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM0 8a8 8 0 1116 0A8 8 0 010 8z"/></svg>
+    AstraeusShield™ · Anti-DDoS · Bot Prevention
+  </div>
+</div>
+
+<!-- MORE SHEET OVERLAY -->
+<div id="sheet-overlay" onclick="closeSheet()"></div>
+
+<!-- MORE SHEET -->
+<div id="more-sheet">
+  <div class="sheet-handle"></div>
+  <div class="sheet-title">More Pages</div>
+  <button class="sheet-row" onclick="goPage('roadmap');closeSheet()">
+    <div class="sheet-icon">📋</div>
+    <div><div class="sheet-label">Roadmap</div><div class="sheet-sublabel">What's being built</div></div>
+  </button>
+  <button class="sheet-row" onclick="goPage('comingsoon');closeSheet()">
+    <div class="sheet-icon">🚀</div>
+    <div><div class="sheet-label">Coming Soon</div><div class="sheet-sublabel">Next big features</div></div>
+  </button>
+  <button class="sheet-row" onclick="goPage('about');closeSheet()">
+    <div class="sheet-icon">🌌</div>
+    <div><div class="sheet-label">About</div><div class="sheet-sublabel">The story of Astraeus</div></div>
+  </button>
+  <button class="sheet-row" onclick="goPage('faq');closeSheet()">
+    <div class="sheet-icon">❓</div>
+    <div><div class="sheet-label">FAQ</div><div class="sheet-sublabel">Common questions</div></div>
+  </button>
+  <button class="sheet-row" onclick="goPage('tos');closeSheet()">
+    <div class="sheet-icon">📄</div>
+    <div><div class="sheet-label">Terms of Service</div><div class="sheet-sublabel">Legal terms</div></div>
+  </button>
+  <button class="sheet-row" onclick="goPage('privacy');closeSheet()">
+    <div class="sheet-icon">🔐</div>
+    <div><div class="sheet-label">Privacy Policy</div><div class="sheet-sublabel">Data & privacy</div></div>
+  </button>
+  <div class="sheet-title" style="margin-top:14px">Theme</div>
+  <button class="sheet-row" onclick="toggleTheme()">
+    <div class="sheet-icon" id="theme-sheet-icon">🌙</div>
+    <div><div class="sheet-label" id="theme-sheet-label">Dark Mode</div><div class="sheet-sublabel">Tap to toggle</div></div>
+  </button>
+  <div style="height:4px"></div>
+  <a href="https://discord.com/oauth2/authorize?client_id=1454948056201166989" target="_blank" class="btn-primary" style="margin-top:4px">
+    ⚡ Add Astraeus to Server
+  </a>
+</div>
+
+<!-- APP ROOT -->
+<div id="root">
+  <!-- Status bar area -->
+  <div id="statusbar"></div>
+
+  <!-- Top Nav -->
+  <div id="topnav">
+    <div id="topnav-logo">ASTRAEUS</div>
+    <div id="topnav-title">HOME</div>
+    <div id="topnav-right">
+      <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" aria-label="Theme">🌙</button>
+      <div class="status-pill" style="display:flex;align-items:center;gap:5px;background:rgba(0,208,132,0.1);border:1px solid rgba(0,208,132,0.2);border-radius:99px;padding:5px 10px;font-size:.62rem;color:var(--ok);font-family:'JetBrains Mono',monospace">
+        <div style="width:5px;height:5px;border-radius:50%;background:var(--ok);animation:pulse 2s infinite;flex-shrink:0"></div>
+        Online
+      </div>
+    </div>
+  </div>
+
+  <!-- Scroll Area -->
+  <div id="scroll">
+
+    <!-- ===== HOME ===== -->
+    <div class="page active" id="pg-home">
+      <div class="hero">
+        <div class="hero-badge">✦ Discord Bot</div>
+        <div class="hero-logo">ASTRAEUS</div>
+        <div class="hero-sub">One bot. Total control.</div>
+        <div class="hero-btns">
+          <a href="https://discord.com/oauth2/authorize?client_id=1454948056201166989" target="_blank" class="btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add to Server
+          </a>
+          <a href="https://discord.gg/YucVbtQpjW" target="_blank" class="btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Support Server
+          </a>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-cell"><div class="stat-val">35+</div><div class="stat-lbl">Commands</div></div>
+        <div class="stat-cell"><div class="stat-val">99.9%</div><div class="stat-lbl">Uptime</div></div>
+        <div class="stat-cell"><div class="stat-val">24/7</div><div class="stat-lbl">Online</div></div>
+        <div class="stat-cell"><div class="stat-val">Free</div><div class="stat-lbl">Always</div></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-badge">About</div>
+      <div class="section-title">The <span class="grad">Titan</span> of Discord Bots</div>
+      <div class="section-lead">Named after the Greek Titan of dusk and stars — bringing celestial-grade tools to your community.</div>
+      <div class="badge-row">
+        <span class="badge">⚡ Fast</span>
+        <span class="badge">🛡️ Anti-Nuke</span>
+        <span class="badge">🔧 Config</span>
+        <span class="badge">🌐 Slash Cmds</span>
+        <span class="badge">📊 Invites</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="section-badge">Features</div>
+      <div class="section-title">Everything You <span class="grad">Need</span></div>
+      <div class="cards-grid">
+        <div class="card"><div class="card-icon">🛡️</div><div class="card-title">Moderation</div><div class="card-desc">Ban, kick, mute, purge with full precision.</div></div>
+        <div class="card"><div class="card-icon">⚙️</div><div class="card-title">Config</div><div class="card-desc">Prefixes, welcome, auto-roles & more.</div></div>
+        <div class="card"><div class="card-icon">📊</div><div class="card-title">Invites</div><div class="card-desc">Full tracking leaderboard & reset tools.</div></div>
+        <div class="card"><div class="card-icon">🎭</div><div class="card-title">React Roles</div><div class="card-desc">Self-assign roles by reacting.</div></div>
+        <div class="card"><div class="card-icon">🔍</div><div class="card-title">Utilities</div><div class="card-desc">Avatar, AFK, server info & more.</div></div>
+        <div class="card"><div class="card-icon">⚡</div><div class="card-title">Slash Cmds</div><div class="card-desc">Native slash command support.</div></div>
+      </div>
+
+      <div class="cs-card" style="margin-top:8px">
+        <div class="cs-card-title">Ready to level up?</div>
+        <div class="cs-card-body">Anti-Nuke, advanced logs and full automation coming soon.</div>
+        <a href="https://discord.com/oauth2/authorize?client_id=1454948056201166989" target="_blank" class="btn-primary" style="position:relative">Add Astraeus Free</a>
+      </div>
+
+      <div class="page-footer">
+        <span>© 2026 Astraeus.</span>
+        <div class="footer-links">
+          <button onclick="goPage('tos')">Terms</button>
+          <button onclick="goPage('privacy')">Privacy</button>
+          <a href="https://discord.gg/YucVbtQpjW" target="_blank">Support</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== FEATURES ===== -->
+    <div class="page" id="pg-features">
+      <div class="section-badge">Features</div>
+      <div class="section-title">What <span class="grad">Astraeus</span> Can Do</div>
+      <div class="section-lead">A full suite to manage, protect, and enhance your Discord.</div>
+      <div class="cards-grid">
+        <div class="card"><div class="card-icon">🛡️</div><div class="card-title">Moderation</div><div class="card-desc">Ban, kick, mute, unban, purge & roles.</div></div>
+        <div class="card"><div class="card-icon">🎭</div><div class="card-title">React Roles</div><div class="card-desc">Self-assign by reacting. Easy onboarding.</div></div>
+        <div class="card"><div class="card-icon">🤖</div><div class="card-title">Auto Role</div><div class="card-desc">Auto-assign on join. Zero manual work.</div></div>
+        <div class="card"><div class="card-icon">💬</div><div class="card-title">Autoresponder</div><div class="card-desc">Keyword triggers with auto replies.</div></div>
+        <div class="card"><div class="card-icon">📨</div><div class="card-title">Welcome</div><div class="card-desc">Custom welcome & leave messages.</div></div>
+        <div class="card"><div class="card-icon">📊</div><div class="card-title">Invite Track</div><div class="card-desc">Who invited whom + leaderboard.</div></div>
+        <div class="card"><div class="card-icon">🔍</div><div class="card-title">User Info</div><div class="card-desc">Avatars, banners, server stats.</div></div>
+        <div class="card"><div class="card-icon">😴</div><div class="card-title">AFK System</div><div class="card-desc">Set AFK with custom message.</div></div>
+        <div class="card"><div class="card-icon">🔧</div><div class="card-title">Vanity</div><div class="card-desc">Manage vanity codes & roles.</div></div>
+        <div class="card"><div class="card-icon">⚡</div><div class="card-title">Slash Cmds</div><div class="card-desc">Global & server slash commands.</div></div>
+      </div>
+      <div class="card" style="text-align:center;padding:24px">
+        <div class="card-title" style="font-size:1rem;margin-bottom:8px">More Coming Soon</div>
+        <div class="card-desc" style="margin-bottom:16px">Anti-Nuke, auto-mod, dashboards in development.</div>
+        <button onclick="goPage('roadmap')" class="btn-primary">View Roadmap</button>
+      </div>
+      <div class="page-footer"><span>© 2026 Astraeus.</span><div class="footer-links"><button onclick="goPage('tos')">Terms</button><button onclick="goPage('privacy')">Privacy</button></div></div>
+    </div>
+
+    <!-- ===== COMMANDS ===== -->
+    <div class="page" id="pg-commands">
+      <div class="section-badge">Commands</div>
+      <div class="section-title">Command <span class="grad">Reference</span></div>
+      <div class="section-lead">Search and copy any command.</div>
+      <div class="cmd-search-wrap">
+        <div class="cmd-search-ico"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+        <input type="search" class="cmd-search" placeholder="Search commands..." oninput="filterMobileCmds(this.value)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      </div>
+      <div class="cmd-group-title">Prefix Commands <span class="cmd-badge" id="mc-p-count">33</span></div>
+      <div id="mc-p-list"></div>
+      <div class="cmd-group-title">Slash — Global <span class="cmd-badge" id="mc-sg-count">12</span></div>
+      <div id="mc-sg-list"></div>
+      <div class="cmd-group-title">Slash — Server <span class="cmd-badge" id="mc-ss-count">21</span></div>
+      <div id="mc-ss-list"></div>
+      <div class="page-footer"><span>© 2026 Astraeus.</span><div class="footer-links"><button onclick="goPage('tos')">Terms</button><button onclick="goPage('privacy')">Privacy</button></div></div>
+    </div>
+
+    <!-- ===== STATUS ===== -->
+    <div class="page" id="pg-status">
+      <div class="section-badge">Status</div>
+      <div class="section-title">All Systems <span class="grad">Operational</span></div>
+      <div class="status-hero">
+        <div class="status-emoji">✅</div>
+        <div class="status-ok">All Systems Operational</div>
+        <div class="status-sub">Last checked: just now</div>
+      </div>
+      <div class="metrics-grid">
+        <div class="metric-cell"><div class="metric-val">99.9%</div><div class="metric-lbl">Uptime</div></div>
+        <div class="metric-cell"><div class="metric-val">~42ms</div><div class="metric-lbl">Latency</div></div>
+        <div class="metric-cell"><div class="metric-val" style="color:var(--ok)">Active</div><div class="metric-lbl">Bot</div></div>
+        <div class="metric-cell"><div class="metric-val">24/7</div><div class="metric-lbl">Availability</div></div>
+        <div class="metric-cell"><div class="metric-val">v1.0</div><div class="metric-lbl">Version</div></div>
+        <div class="metric-cell"><div class="metric-val" style="color:var(--ok)">Active</div><div class="metric-lbl">Shield™</div></div>
+      </div>
+      <div class="uptime-bar-wrap">
+        <div class="uptime-labels"><span>Last 90 Days</span><span style="color:var(--ok)">99.9%</span></div>
+        <div class="uptime-bar"><div class="uptime-fill" id="uptime-fill"></div></div>
+      </div>
+      <div class="uptime-days" id="uptime-days"></div>
+      <div style="margin-top:20px">
+        <div class="svc-row"><div class="svc-name"><div class="svc-dot"></div>Discord Bot Core</div><div class="svc-status">Operational</div></div>
+        <div class="svc-row"><div class="svc-name"><div class="svc-dot"></div>Command Processing</div><div class="svc-status">Operational</div></div>
+        <div class="svc-row"><div class="svc-name"><div class="svc-dot"></div>Slash Commands API</div><div class="svc-status">Operational</div></div>
+        <div class="svc-row"><div class="svc-name"><div class="svc-dot"></div>Website</div><div class="svc-status">Operational</div></div>
+        <div class="svc-row"><div class="svc-name"><div class="svc-dot"></div>AstraeusShield™</div><div class="svc-status">Active</div></div>
+      </div>
+      <div class="page-footer"><span>© 2026 Astraeus.</span><div class="footer-links"><button onclick="goPage('tos')">Terms</button><button onclick="goPage('privacy')">Privacy</button></div></div>
+    </div>
+
+    <!-- ===== MORE (placeholder, sheet handles nav) ===== -->
+    <div class="page" id="pg-more">
+      <div class="section-badge">Navigation</div>
+      <div class="section-title">More <span class="grad">Pages</span></div>
+      <div class="section-lead">Tap any option below to navigate.</div>
+      <button class="card" style="width:100%;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="goPage('roadmap')">
+        <div class="card-icon" style="margin:0">📋</div><div><div class="card-title">Roadmap</div><div class="card-desc">What's being built</div></div>
+      </button>
+      <button class="card" style="width:100%;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="goPage('comingsoon')">
+        <div class="card-icon" style="margin:0">🚀</div><div><div class="card-title">Coming Soon</div><div class="card-desc">Next big features</div></div>
+      </button>
+      <button class="card" style="width:100%;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="goPage('about')">
+        <div class="card-icon" style="margin:0">🌌</div><div><div class="card-title">About</div><div class="card-desc">The story of Astraeus</div></div>
+      </button>
+      <button class="card" style="width:100%;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="goPage('faq')">
+        <div class="card-icon" style="margin:0">❓</div><div><div class="card-title">FAQ</div><div class="card-desc">Common questions answered</div></div>
+      </button>
+      <button class="card" style="width:100%;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="goPage('tos')">
+        <div class="card-icon" style="margin:0">📄</div><div><div class="card-title">Terms of Service</div><div class="card-desc">Legal terms & conditions</div></div>
+      </button>
+      <button class="card" style="width:100%;text-align:left;display:flex;align-items:center;gap:12px;cursor:pointer" onclick="goPage('privacy')">
+        <div class="card-icon" style="margin:0">🔐</div><div><div class="card-title">Privacy Policy</div><div class="card-desc">Data & privacy information</div></div>
+      </button>
+      <div style="height:8px"></div>
+      <a href="https://discord.com/oauth2/authorize?client_id=1454948056201166989" target="_blank" class="btn-primary">⚡ Add Astraeus Free</a>
+      <a href="https://discord.gg/YucVbtQpjW" target="_blank" class="btn-secondary" style="margin-top:10px">💬 Support Server</a>
+    </div>
+
+    <!-- ===== ROADMAP ===== -->
+    <div class="page" id="pg-roadmap">
+      <div class="section-badge">Roadmap</div>
+      <div class="section-title">What's Being <span class="grad">Built</span></div>
+      <div class="section-lead">A transparent look at what's in progress and what's coming.</div>
+      <div class="rm-section-title">🚧 In Progress</div>
+      <div id="rm-ip"></div>
+      <div class="rm-section-title">🔜 Coming Soon</div>
+      <div id="rm-cs"></div>
+      <div class="rm-section-title">🌌 Future Plans</div>
+      <div id="rm-fp"></div>
+      <div class="page-footer"><span>© 2026 Astraeus.</span><div class="footer-links"><button onclick="goPage('tos')">Terms</button><button onclick="goPage('privacy')">Privacy</button></div></div>
+    </div>
+
+    <!-- ===== COMING SOON ===== -->
+    <div class="page" id="pg-comingsoon">
+      <div class="section-badge">Development</div>
+      <div class="section-title">What's <span class="grad">Coming</span></div>
+      <div class="section-lead">The biggest features in Astraeus history are almost ready.</div>
+      <div class="cs-card">
+        <div class="cs-card-title">The Next Chapter of Astraeus</div>
+        <div class="cs-card-body">Anti-Nuke systems, advanced logs, auto-moderation, and full server automation — being built right now.</div>
+        <a href="https://discord.com/oauth2/authorize?client_id=1454948056201166989" target="_blank" class="btn-primary" style="position:relative">Add Astraeus Free</a>
+      </div>
+      <div class="card"><div class="card-icon">🛡️</div><div class="card-title">Anti-Nuke System</div><div class="card-desc">Protect against mass bans, deletions, and permission abuse. Auto-lockdowns on attack detection.</div><div class="feature-badge">In Development</div></div>
+      <div class="card"><div class="card-icon">📋</div><div class="card-title">Advanced Mod Logs</div><div class="card-desc">Complete audit trails for every moderation action. Searchable history and per-moderator stats.</div><div class="feature-badge">Coming Soon</div></div>
+      <div class="card"><div class="card-icon">🤖</div><div class="card-title">Auto-Moderation</div><div class="card-desc">Custom rules: spam detection, link filtering, banned words, mention limits, and auto responses.</div><div class="feature-badge">Coming Soon</div></div>
+      <div class="card"><div class="card-icon">🌐</div><div class="card-title">Server Dashboard</div><div class="card-desc">A visual web dashboard to configure all Astraeus settings. No more command-only setup.</div><div class="feature-badge">Future Plans</div></div>
+      <div class="page-footer"><span>© 2026 Astraeus.</span><div class="footer-links"><button onclick="goPage('tos')">Terms</button><button onclick="goPage('privacy')">Privacy</button></div></div>
+    </div>
+
+    <!-- ===== ABOUT ===== -->
+    <div class="page" id="pg-about">
+      <div class="section-badge">About</div>
+      <div class="section-title">The <span class="grad">TITAN</span> of Discord Bots</div>
+      <div class="section-lead">Born from the need for a truly complete Discord bot — moderation, utilities, management, and community tools without compromise.</div>
+      <div class="about-quick-stats">
+        <div class="qs-cell"><div class="qs-val">35+</div><div class="qs-lbl">Commands</div></div>
+        <div class="qs-cell"><div class="qs-val">99.9%</div><div class="qs-lbl">Uptime</div></div>
+        <div class="qs-cell"><div class="qs-val">24/7</div><div class="qs-lbl">Online</div></div>
+        <div class="qs-cell"><div class="qs-val">Free</div><div class="qs-lbl">Always</div></div>
+      </div>
+      <div class="card"><div class="card-icon">🌌</div><div class="card-title">The Name</div><div class="card-desc">Astraeus is the Titan of dusk and father of the stars. Like its namesake, this bot stands between chaos and order — bringing cosmic-level control to your server.</div></div>
+      <div class="card"><div class="card-icon">🎯</div><div class="card-title">The Mission</div><div class="card-desc">To provide server administrators with a reliable, feature-rich, constantly improving tool that makes running a community easier, safer, and more engaging.</div></div>
+      <div class="card"><div class="card-icon">🔐</div><div class="card-title">Security First</div><div class="card-desc">We collect only what's necessary, store nothing sensitive, and are actively building anti-nuke systems to protect every community that trusts Astraeus.</div></div>
+      <a href="https://discord.gg/YucVbtQpjW" target="_blank" class="btn-primary" style="margin-top:8px">Join Support Server</a>
+      <div class="page-footer"><span>© 2026 Astraeus.</span><div class="footer-links"><button onclick="goPage('tos')">Terms</button><button onclick="goPage('privacy')">Privacy</button></div></div>
+    </div>
+
+    <!-- ===== FAQ ===== -->
+    <div class="page" id="pg-faq">
+      <div class="section-badge">FAQ</div>
+      <div class="section-title">Frequently Asked <span class="grad">Questions</span></div>
+      <div class="section-lead">Can't find your answer? Join our Discord.</div>
+      <div id="faq-container"></div>
+      <div class="page-footer"><span>© 2026 Astraeus.</span><div class="footer-links"><button onclick="goPage('tos')">Terms</button><button onclick="goPage('privacy')">Privacy</button></div></div>
+    </div>
+
+    <!-- ===== TOS ===== -->
+    <div class="page" id="pg-tos">
+      <div class="section-badge">Legal</div>
+      <div class="section-title">Terms of <span class="grad">Service</span></div>
+      <div class="legal-date">Last Updated: January 1, 2026</div>
+      <div id="tos-container"></div>
+      <div class="page-footer"><span>© 2026 Astraeus.</span><div class="footer-links"><button onclick="goPage('privacy')">Privacy</button><a href="https://discord.gg/YucVbtQpjW" target="_blank">Support</a></div></div>
+    </div>
+
+    <!-- ===== PRIVACY ===== -->
+    <div class="page" id="pg-privacy">
+      <div class="section-badge">Legal</div>
+      <div class="section-title">Privacy <span class="grad">Policy</span></div>
+      <div class="legal-date">Last Updated: January 1, 2026</div>
+      <div id="priv-container"></div>
+      <div class="page-footer"><span>© 2026 Astraeus.</span><div class="footer-links"><button onclick="goPage('tos')">Terms</button><a href="https://discord.gg/YucVbtQpjW" target="_blank">Support</a></div></div>
+    </div>
+
+  </div><!-- end #scroll -->
+
+  <!-- BOTTOM TAB BAR -->
+  <div id="tabbar">
+    <button class="tab active" id="tab-home" onclick="goPage('home')">
+      <div class="tab-icon">🏠</div>
+      <div class="tab-label">Home</div>
+    </button>
+    <button class="tab" id="tab-features" onclick="goPage('features')">
+      <div class="tab-icon">⭐</div>
+      <div class="tab-label">Features</div>
+    </button>
+    <button class="tab" id="tab-commands" onclick="goPage('commands')">
+      <div class="tab-icon">⌨️</div>
+      <div class="tab-label">Commands</div>
+    </button>
+    <button class="tab" id="tab-status" onclick="goPage('status')">
+      <div class="tab-icon">📡</div>
+      <div class="tab-label">Status</div>
+    </button>
+    <button class="tab" id="tab-more" onclick="goPage('more')">
+      <div class="tab-icon">☰</div>
+      <div class="tab-label">More</div>
+    </button>
+  </div>
+</div><!-- end #root -->
+
+<script>
+// ── DIAMONDS ──
+(function(){
+  const f=document.getElementById('diamonds');
+  const sizes=[8,10,12,15,18,22];
+  const speeds=[10,13,16,19,24,30];
+  for(let i=0;i<22;i++){
+    const d=document.createElement('div');
+    d.className='dm';
+    const s=sizes[i%sizes.length];
+    const sp=speeds[i%speeds.length];
+    d.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;bottom:-${s*2}px;animation-duration:${sp}s;animation-delay:${-(Math.random()*sp)}s`;
+    f.appendChild(d);
+  }
+})();
+
+// ── IP DETECTION ──
+let myIP='Unknown';
+fetch('https://ipapi.co/json/').then(r=>r.json()).then(d=>{
+  myIP=d.ip||'Unknown';
+  const loc=[d.city,d.country].filter(Boolean).join(', ');
+  document.getElementById('v-ip').textContent=myIP;
+  document.getElementById('v-loc').textContent=loc||'Location unknown';
+}).catch(()=>{
+  fetch('https://api.ipify.org?format=json').then(r=>r.json()).then(d=>{
+    myIP=d.ip||'Unknown';
+    document.getElementById('v-ip').textContent=myIP;
+    document.getElementById('v-loc').textContent='';
+  }).catch(()=>{
+    document.getElementById('v-ip').textContent='Unknown';
+  });
+});
+
+// ── VERIFY ──
+const VK='ast_verified_m1';
+let verifyDone=false;
+if(sessionStorage.getItem(VK)==='1'){
+  document.getElementById('verify').style.display='none';
+}
+function startVerify(){
+  if(verifyDone)return;verifyDone=true;
+  document.getElementById('v-btn').style.pointerEvents='none';
+  document.getElementById('v-box').classList.add('checked');
+  document.getElementById('v-progress').style.display='block';
+  const msgs=['Checking browser...','Verifying JS...','Analyzing patterns...','Running detection...','All checks passed ✓'];
+  let p=0,mi=0;
+  const fill=document.getElementById('v-bar-fill');
+  const st=document.getElementById('v-status-txt');
+  const iv=setInterval(()=>{
+    p+=Math.random()*18+6;if(p>100)p=100;
+    fill.style.width=p+'%';
+    if(mi<msgs.length&&p>(mi+1)*18){st.textContent=msgs[Math.min(mi,msgs.length-1)];mi++;}
+    if(p>=100){
+      clearInterval(iv);
+      st.textContent='✓ Verified — Welcome to Astraeus!';
+      st.style.color='var(--ok)';
+      setTimeout(()=>{
+        sessionStorage.setItem(VK,'1');
+        const v=document.getElementById('verify');
+        v.classList.add('done');
+        setTimeout(()=>v.style.display='none',500);
+      },800);
+    }
+  },100);
+}
+
+// ── THEME ──
+function toggleTheme(){
+  const h=document.documentElement;
+  const next=h.getAttribute('data-theme')==='dark'?'light':'dark';
+  h.setAttribute('data-theme',next);
+  const icon=next==='dark'?'🌙':'☀️';
+  document.getElementById('theme-btn').textContent=icon;
+  const sl=document.getElementById('theme-sheet-label');
+  const si=document.getElementById('theme-sheet-icon');
+  if(sl)sl.textContent=next==='dark'?'Dark Mode':'Light Mode';
+  if(si)si.textContent=icon;
+  document.querySelector('meta[name="theme-color"]').setAttribute('content',next==='dark'?'#080b14':'#eef2ff');
+  localStorage.setItem('ast-theme',next);
+}
+(function(){
+  const s=localStorage.getItem('ast-theme');
+  if(s){
+    document.documentElement.setAttribute('data-theme',s);
+    if(s==='light'){
+      document.getElementById('theme-btn').textContent='☀️';
+      const sl=document.getElementById('theme-sheet-label');
+      const si=document.getElementById('theme-sheet-icon');
+      if(sl)sl.textContent='Light Mode';if(si)si.textContent='☀️';
+    }
+  }
+})();
+
+// ── PAGE NAVIGATION ──
+const PAGE_LABELS={
+  home:'Home',features:'Features',commands:'Commands',status:'Status',more:'More',
+  roadmap:'Roadmap',comingsoon:'Coming Soon',about:'About',faq:'FAQ',tos:'Terms',privacy:'Privacy'
+};
+const TAB_PAGES=['home','features','commands','status','more'];
+
+function goPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  const pg=document.getElementById('pg-'+id);
+  if(pg){pg.classList.add('active');document.getElementById('scroll').scrollTo(0,0);}
+  document.getElementById('topnav-title').textContent=(PAGE_LABELS[id]||id).toUpperCase();
+  // Update tab active state
+  TAB_PAGES.forEach(t=>{
+    const tab=document.getElementById('tab-'+t);
+    if(tab)tab.classList.toggle('active',t===id);
+  });
+  // Trigger status bar animation
+  if(id==='status') setTimeout(()=>{const f=document.getElementById('uptime-fill');if(f)f.style.width='99.9%';},200);
+}
+
+// ── MORE SHEET ──
+function openSheet(){
+  document.getElementById('more-sheet').classList.add('open');
+  document.getElementById('sheet-overlay').classList.add('open');
+}
+function closeSheet(){
+  document.getElementById('more-sheet').classList.remove('open');
+  document.getElementById('sheet-overlay').classList.remove('open');
+}
+
+// ── DATA ──
+const PREFIX_CMDS=[
+  {n:'avatar',d:"Displays a user's avatar.",c:'Utility'},{n:'banner',d:"Shows a user's banner.",c:'Utility'},
+  {n:'serverinfo',d:'Detailed server information.',c:'Utility'},{n:'userinfo',d:'User information.',c:'Utility'},
+  {n:'afk',d:'Sets your AFK status.',c:'Utility'},{n:'setprefix',d:'Changes the bot prefix.',c:'Config'},
+  {n:'info',d:'Astraeus bot info & stats.',c:'Utility'},{n:'ping',d:'API & message latency.',c:'Utility'},
+  {n:'steal',d:'Steal an emoji from another server.',c:'Utility'},{n:'imagelink',d:'Gets direct image URL.',c:'Utility'},
+  {n:'status',d:"Bot's status & uptime.",c:'Utility'},{n:'uptime',d:'Bot uptime.',c:'Utility'},
+  {n:'say',d:'Bot repeats your message.',c:'Fun'},{n:'role',d:'Give or remove a role.',c:'Moderation'},
+  {n:'search',d:'Search the web.',c:'Utility'},{n:'kick',d:'Kick a member.',c:'Moderation'},
+  {n:'ban',d:'Ban a member.',c:'Moderation'},{n:'unban',d:'Unban a user.',c:'Moderation'},
+  {n:'mute',d:'Mute a member.',c:'Moderation'},{n:'unmute',d:'Unmute a member.',c:'Moderation'},
+  {n:'purge',d:'Bulk-delete messages.',c:'Moderation'},{n:'autorole',d:'Auto role on join.',c:'Config'},
+  {n:'reactionrole',d:'Set up reaction roles.',c:'Config'},{n:'autoresponder',d:'Keyword auto replies.',c:'Config'},
+  {n:'vanity',d:'Manage vanity code.',c:'Config'},{n:'welc',d:'Configure welcome message.',c:'Config'},
+  {n:'welclog',d:'Set welcome log channel.',c:'Config'},{n:'leavelog',d:'Set leave log channel.',c:'Config'},
+  {n:'invites',d:"Member's invite count.",c:'Utility'},{n:'inviteleaderboard',d:'Invite leaderboard.',c:'Utility'},
+  {n:'resetinvites',d:'Reset invite counts.',c:'Moderation'},{n:'servers',d:'Total servers Astraeus is in.',c:'Utility'},
+  {n:'people',d:'Total users Astraeus reaches.',c:'Utility'},
+];
+const SLASH_GLOBAL=[
+  {n:'/avatar',d:"User's avatar.",s:'Global'},{n:'/banner',d:"User's banner.",s:'Global'},
+  {n:'/serverinfo',d:'Server information.',s:'Global'},{n:'/afk',d:'AFK status.',s:'Global'},
+  {n:'/status',d:'Bot status.',s:'Global'},{n:'/info',d:'About Astraeus.',s:'Global'},
+  {n:'/uptime',d:'Bot uptime.',s:'Global'},{n:'/ping',d:'API latency.',s:'Global'},
+  {n:'/help',d:'All commands.',s:'Global'},{n:'/servers',d:'Server count.',s:'Global'},
+  {n:'/people',d:'User count.',s:'Global'},{n:'/search',d:'Web search.',s:'Global'},
+];
+const SLASH_SERVER=[
+  {n:'/welc',d:'Welcome message.',s:'Server'},{n:'/welclog',d:'Welcome log channel.',s:'Server'},
+  {n:'/leavelog',d:'Leave log channel.',s:'Server'},{n:'/imagelink',d:'Image URL.',s:'Server'},
+  {n:'/setprefix',d:'Bot prefix.',s:'Server'},{n:'/steal',d:'Steal emoji.',s:'Server'},
+  {n:'/kick',d:'Kick member.',s:'Server'},{n:'/ban',d:'Ban member.',s:'Server'},
+  {n:'/unban',d:'Unban user.',s:'Server'},{n:'/mute',d:'Mute member.',s:'Server'},
+  {n:'/unmute',d:'Unmute member.',s:'Server'},{n:'/purge',d:'Delete messages.',s:'Server'},
+  {n:'/autorole',d:'Auto role.',s:'Server'},{n:'/reactionrole',d:'Reaction roles.',s:'Server'},
+  {n:'/autoresponder',d:'Auto responses.',s:'Server'},{n:'/vanity',d:'Vanity settings.',s:'Server'},
+  {n:'/say',d:'Bot says something.',s:'Server'},{n:'/role',d:'Give/remove role.',s:'Server'},
+  {n:'/invites',d:'Invite count.',s:'Server'},{n:'/inviteleaderboard',d:'Invite leaderboard.',s:'Server'},
+  {n:'/resetinvites',d:'Reset invites.',s:'Server'},
+];
+
+function buildCmdCard(cmd,isSlash){
+  const div=document.createElement('div');
+  div.className='cmd-card';
+  const third=isSlash?`<span class="cmd-info-cat">${cmd.s}</span>`:`<span class="cmd-info-cat">${cmd.c}</span>`;
+  div.innerHTML=`<span class="cmd-chip${isSlash?' slash':''}">${cmd.n}</span><div class="cmd-info"><div class="cmd-info-desc">${cmd.d}</div>${third}</div><button class="cmd-copy" onclick="mCopy('${cmd.n}',this)">📋 Copy</button>`;
+  return div;
+}
+function buildCommands(){
+  const pl=document.getElementById('mc-p-list');
+  const sgl=document.getElementById('mc-sg-list');
+  const ssl=document.getElementById('mc-ss-list');
+  PREFIX_CMDS.forEach(c=>pl.appendChild(buildCmdCard(c,false)));
+  SLASH_GLOBAL.forEach(c=>sgl.appendChild(buildCmdCard(c,true)));
+  SLASH_SERVER.forEach(c=>ssl.appendChild(buildCmdCard(c,true)));
+  document.getElementById('mc-p-count').textContent=PREFIX_CMDS.length;
+  document.getElementById('mc-sg-count').textContent=SLASH_GLOBAL.length;
+  document.getElementById('mc-ss-count').textContent=SLASH_SERVER.length;
+}
+function mCopy(cmd,btn){
+  navigator.clipboard.writeText(cmd).then(()=>{
+    btn.classList.add('copied');btn.textContent='✓ Copied!';
+    setTimeout(()=>{btn.classList.remove('copied');btn.textContent='📋 Copy';},2000);
+  });
+}
+function filterMobileCmds(q){
+  q=q.toLowerCase();
+  document.querySelectorAll('.cmd-card').forEach(c=>{
+    c.classList.toggle('cmd-hidden',q&&!c.textContent.toLowerCase().includes(q));
+  });
+}
+
+// ── ROADMAP ──
+const ROADMAP={
+  ip:[
+    {t:'Anti-Nuke Protection',d:'Core system defending against attacks'},
+    {t:'Mass Ban/Kick Detection',d:'Real-time activity detection'},
+    {t:'Role & Channel Protection',d:'Counter mass deletion attempts'},
+    {t:'Permission Abuse Prevention',d:'Block unauthorized escalation'},
+    {t:'Auto Lockdown Triggers',d:'Auto-lockdown during nukes'},
+    {t:'Stability Improvements',d:'Faster, more reliable responses'},
+  ],
+  cs:[
+    {t:'Enhanced Features',d:'Expanded toolset across all categories'},
+    {t:'Advanced Mod Logs',d:'Searchable moderation history'},
+    {t:'Configurable Auto-Mod',d:'Custom rules and filters'},
+    {t:'Protection Presets',d:'One-click protection profiles'},
+    {t:'Expanded Utilities',d:'More everyday management tools'},
+    {t:'Config Tools',d:'Easier, intuitive server setup'},
+  ],
+  fp:[
+    {t:'Full Automation',d:'Schedule tasks and announcements'},
+    {t:'Web Dashboard',d:'Visual settings management'},
+    {t:'Role Management',d:'Advanced hierarchies & bulk actions'},
+    {t:'Fun Commands',d:'Games, polls, giveaways'},
+    {t:'Server Analytics',d:'Growth tracking & insights'},
+    {t:'Modular Toggles',d:'Enable/disable per server'},
+  ]
+};
+function buildRoadmap(){
+  [{key:'ip',el:'rm-ip',cls:'ip'},{key:'cs',el:'rm-cs',cls:'cs'},{key:'fp',el:'rm-fp',cls:'fp'}].forEach(({key,el,cls})=>{
+    const c=document.getElementById(el);
+    ROADMAP[key].forEach(item=>{
+      const d=document.createElement('div');d.className='rm-card';
+      d.innerHTML=`<div class="rm-dot ${cls}"></div><div><div class="rm-text">${item.t}</div><div class="rm-sub">${item.d}</div></div>`;
+      c.appendChild(d);
+    });
+  });
+}
+
+// ── STATUS ──
+function buildStatus(){
+  const c=document.getElementById('uptime-days');
+  for(let i=0;i<90;i++){
+    const d=document.createElement('div');const r=Math.random();
+    d.className='uptime-day'+(r<.015?' down':r<.03?' warn':'');
+    c.appendChild(d);
+  }
+}
+
+// ── FAQ ──
+const FAQ_DATA=[
+  {q:'What is Astraeus?',a:'Astraeus is a powerful, all-in-one Discord bot for server administrators. It provides moderation, utility commands, server configuration, invite tracking, reaction roles, autoresponders, and much more.'},
+  {q:'How do I add Astraeus to my server?',a:'Click "Add to Server" anywhere on this page. You need "Manage Server" permission on your Discord server.'},
+  {q:'What permissions does Astraeus need?',a:'Moderation commands need Ban Members, Kick Members, and Manage Roles. Logging requires Send Messages and Embed Links in log channels.'},
+  {q:'Is Astraeus free?',a:'Yes. All current commands and features are completely free. Core functionality will always remain free.'},
+  {q:'What data does Astraeus collect?',a:'Only server IDs, channel IDs, role IDs, and config settings you explicitly set. We do NOT collect private messages, voice data, or personal information.'},
+  {q:'What is the default prefix?',a:'The default prefix is "!" — change it with setprefix (e.g., !setprefix .).'},
+  {q:'How does invite tracking work?',a:'Astraeus tracks which invite each new member used. View counts with "invites", rankings with "inviteleaderboard", and reset with "resetinvites".'},
+  {q:'How do I get support?',a:'Join our Discord support server at discord.gg/YucVbtQpjW for real-time help.'},
+  {q:'Can I request features?',a:'Absolutely. Join our support server and post in the suggestions channel.'},
+];
+function buildFAQ(){
+  const c=document.getElementById('faq-container');
+  FAQ_DATA.forEach(item=>{
+    const d=document.createElement('div');d.className='faq-item';
+    d.innerHTML=`<button class="faq-q" onclick="toggleFAQ(this.parentElement)">${item.q}<svg class="faq-chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button><div class="faq-a"><div style="padding-bottom:4px">${item.a}</div></div>`;
+    c.appendChild(d);
+  });
+}
+function toggleFAQ(item){
+  const o=item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(f=>f.classList.remove('open'));
+  if(!o)item.classList.add('open');
+}
+
+// ── LEGAL ──
+const TOS=[
+  {h:'1. Acceptance of Terms',b:'<p>By adding Astraeus to your Discord server or using any features, you agree to these Terms. If you disagree, you must not use the Bot.</p>'},
+  {h:'2. Description of Service',b:'<p>Astraeus offers moderation, utility, server configuration, invite tracking, reaction roles, and related tools. Provided "as is" and may be updated or discontinued at any time.</p>'},
+  {h:'3. User Responsibilities',b:'<p>You agree to: use the Bot only for lawful purposes; not harass or spam others; not exploit or reverse-engineer the Bot; and ensure compliance with applicable laws.</p>'},
+  {h:'4. Prohibited Uses',b:'<p>Prohibited: server raids, targeted harassment, doxxing, bot trafficking, collecting user data without consent, and use in servers promoting illegal activity or hate speech.</p>'},
+  {h:'5. Moderation',b:'<p>We reserve the right to blacklist servers or users at our sole discretion without notice.</p>'},
+  {h:'6. Service Availability',b:'<p>We strive for high uptime but provide no guarantee of continuous service.</p>'},
+  {h:'7. Intellectual Property',b:'<p>Astraeus, its branding, name, code, and materials are the intellectual property of the Astraeus development team.</p>'},
+  {h:'8. Limitation of Liability',b:'<p>To the maximum extent permitted by law, the Astraeus team is not liable for indirect, incidental, or consequential damages.</p>'},
+  {h:'9. Changes',b:'<p>We may update these Terms at any time. Continued use constitutes acceptance.</p>'},
+  {h:'10. Contact',b:'<p>Questions? Join <a href="https://discord.gg/YucVbtQpjW">discord.gg/YucVbtQpjW</a></p>'},
+];
+const PRIVACY=[
+  {h:'1. Introduction',b:'<p>This Privacy Policy explains how Astraeus collects, uses, and protects information. We are committed to data minimization.</p>'},
+  {h:'2. Information We Collect',b:'<p>We collect: server config data (prefixes, channel IDs, role IDs), invite metadata, moderation records, and anonymous usage statistics. We do NOT collect private messages or voice data.</p>'},
+  {h:'3. How We Use Your Data',b:'<p>Data is used solely to deliver Bot features, persist settings, improve performance, enforce our Terms, and investigate abuse.</p>'},
+  {h:'4. Data Retention',b:'<p>Config data is retained while Astraeus is in your server. After removal, data may be kept up to 30 days before deletion. Request immediate deletion via our support server.</p>'},
+  {h:'5. Data Sharing',b:'<p>We do not sell or trade your data. Data may be shared only when required by law or with infrastructure providers under strict confidentiality terms.</p>'},
+  {h:'6. Security',b:'<p>We implement industry-standard measures including access controls and encrypted communications.</p>'},
+  {h:'7. Your Rights',b:'<p>You have the right to access, delete, or opt out by removing Astraeus from your server.</p>'},
+  {h:'8. Contact',b:'<p>Privacy inquiries: <a href="https://discord.gg/YucVbtQpjW">discord.gg/YucVbtQpjW</a></p>'},
+];
+function buildLegal(){
+  [['tos-container',TOS],['priv-container',PRIVACY]].forEach(([id,data])=>{
+    const c=document.getElementById(id);
+    data.forEach(s=>{const d=document.createElement('div');d.className='legal-section';d.innerHTML=`<h2>${s.h}</h2>${s.b}`;c.appendChild(d);});
+  });
+}
+
+// ── INIT ──
+document.addEventListener('DOMContentLoaded',()=>{
+  buildCommands();buildRoadmap();buildFAQ();buildLegal();buildStatus();
+});
+</script>
+</body>
+</html>
